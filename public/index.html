@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>CV con QR</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Sube tu CV</h1>
+
+    <input type="file" id="pdf" accept="application/pdf">
+    <button onclick="upload()">Generar QR</button>
+
+    <div id="result"></div>
+  </div>
+
+<script>
+async function upload() {
+  const file = document.getElementById("pdf").files[0];
+  if (!file) return alert("Selecciona un PDF");
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64 = reader.result.split(",")[1];
+
+    const res = await fetch("/.netlify/functions/upload", {
+      method: "POST",
+      body: JSON.stringify({ file: base64 })
+    });
+
+    const data = await res.json();
+
+    document.getElementById("result").innerHTML = `
+      <h3>QR generado</h3>
+      <img src="data:image/png;base64,${data.qr}">
+      <br>
+      <a href="${data.pdf_url}" target="_blank">Ver / Descargar PDF</a>
+    `;
+  };
+
+  reader.readAsDataURL(file);
+}
+</script>
+</body>
+</html>
